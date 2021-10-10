@@ -35,6 +35,9 @@ public class DiscordService implements DiscordPort {
 
   private final YoutubePort youtubePort;
 
+  // TODO replace spaces in spotify playlist name
+  // TODO split message into parts
+
   @Autowired
   public DiscordService(
       SpotifyPort spotifyPort,

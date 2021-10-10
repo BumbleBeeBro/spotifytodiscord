@@ -43,7 +43,7 @@ public class SpotifyService implements SpotifyPort {
     val tracks =
         Arrays.stream(playlist.getTracks().getItems())
             .map(Track::of)
-            .limit(50)
+            .limit(20)
             .collect(Collectors.toList());
 
     return Playlist.builder()
