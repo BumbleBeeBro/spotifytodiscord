@@ -5,6 +5,7 @@ import com.bumblebeebro.spotifytodiscord.domain.model.YoutubeResult;
 import com.bumblebeebro.spotifytodiscord.domain.ports.DiscordPort;
 import com.bumblebeebro.spotifytodiscord.domain.ports.SpotifyPort;
 import com.bumblebeebro.spotifytodiscord.domain.ports.YoutubePort;
+import com.google.common.collect.Lists;
 import discord4j.core.DiscordClient;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
@@ -34,9 +35,6 @@ public class DiscordService implements DiscordPort {
   private final SpotifyPort spotifyPort;
 
   private final YoutubePort youtubePort;
-
-  // TODO replace spaces in spotify playlist name
-  // TODO split message into parts
 
   @Autowired
   public DiscordService(
@@ -70,29 +68,16 @@ public class DiscordService implements DiscordPort {
                         val messageContent = message.getContent();
                         val playListid =
                             messageContent.substring(messageContent.indexOf(' ') + 1).trim();
-                        val playlist = spotifyPort.getPlaylist(playListid);
+                        val playlist = spotifyPort.getPlaylistByUrl(playListid);
+
+                        val parsedPlaylistName = playlist.getName().replace(' ', '_');
 
                         // message to create new playlist
                         this.writeMessage(
-                            message, MUSICBOT_MAKEPLAYLIST_COMMAND + " " + playlist.getName());
+                            message, MUSICBOT_MAKEPLAYLIST_COMMAND + " " + parsedPlaylistName);
 
-                        // message to append to playlist
-                        var appendMessage =
-                            this.getPlaylistAsYoutubeLinks(playlist.getTracks()).stream()
-                                .map(this::youtubeLinkToCopyableString)
-                                .reduce((s1, s2) -> s1 + " | " + s2);
-
-                        if (appendMessage.isEmpty()) {
-                          throw new IllegalArgumentException("Playlist is empty");
-                        } else {
-                          this.writeMessage(
-                              message,
-                              MUSICBOT_APPENDPLAYLIST_COMMAND
-                                  + " "
-                                  + playlist.getName()
-                                  + " "
-                                  + appendMessage.get());
-                        }
+                        this.writeAppendMessageBatch(
+                            message, playlist.getTracks(), parsedPlaylistName);
 
                       } catch (Exception e) {
                         log.error("transformation failed", e);
@@ -116,6 +101,27 @@ public class DiscordService implements DiscordPort {
 
   private void writeMessage(Message message, String content) {
     message.getChannel().flatMap(messageChannel -> messageChannel.createMessage(content)).block();
+  }
+
+  private void writeAppendMessageBatch(
+      Message message, List<Track> tracksLinks, String parsedPlaylistName) {
+
+    for (List<String> stringBatch :
+        Lists.partition(this.getPlaylistAsYoutubeLinks(tracksLinks), 20)) {
+      // message to append to playlist
+      var appendMessage =
+          stringBatch.stream()
+              .map(this::youtubeLinkToCopyableString)
+              .reduce((s1, s2) -> s1 + " | " + s2);
+
+      if (appendMessage.isEmpty()) {
+        throw new IllegalArgumentException("Playlist is empty");
+      } else {
+        this.writeMessage(
+            message,
+            MUSICBOT_APPENDPLAYLIST_COMMAND + " " + parsedPlaylistName + " " + appendMessage.get());
+      }
+    }
   }
 
   private String youtubeLinkToCopyableString(String link) {
