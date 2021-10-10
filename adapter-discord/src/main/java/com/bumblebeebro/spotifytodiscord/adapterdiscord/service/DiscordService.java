@@ -1,5 +1,7 @@
 package com.bumblebeebro.spotifytodiscord.adapterdiscord.service;
 
+import com.bumblebeebro.spotifytodiscord.domain.enums.PlaylistInputType;
+import com.bumblebeebro.spotifytodiscord.domain.model.Playlist;
 import com.bumblebeebro.spotifytodiscord.domain.model.Track;
 import com.bumblebeebro.spotifytodiscord.domain.model.YoutubeResult;
 import com.bumblebeebro.spotifytodiscord.domain.ports.DiscordPort;
@@ -25,8 +27,8 @@ import java.util.stream.Collectors;
 @Log4j2
 public class DiscordService implements DiscordPort {
 
-  public static String COMMAND_PREFIX = ":playlist";
-  public static String MUSICBOT_PREFIX = "!play";
+  public static String COMMAND_PLAYLIST_PREFIX = ":playlist";
+  public static String COMMAND_PLAYLISTID_PREFIX = ":playlistid";
   public static String MUSICBOT_MAKEPLAYLIST_COMMAND = "!playlist make";
   public static String MUSICBOT_APPENDPLAYLIST_COMMAND = "!playlist append";
 
@@ -54,39 +56,50 @@ public class DiscordService implements DiscordPort {
                 gateway.on(
                     MessageCreateEvent.class,
                     event -> {
-                      val message = event.getMessage();
-
-                      if (!message.getContent().startsWith(COMMAND_PREFIX)) {
+                      if (event.getMessage().getContent().startsWith(COMMAND_PLAYLISTID_PREFIX)) {
+                        this.handlePlaylistRequest(event, PlaylistInputType.PLAYLIST_ID);
+                      } else if (event
+                          .getMessage()
+                          .getContent()
+                          .startsWith(COMMAND_PLAYLIST_PREFIX)) {
+                        this.handlePlaylistRequest(event, PlaylistInputType.PLAYLIST_URL);
+                      } else {
                         return Mono.empty();
-                      }
-
-                      log.info("starting lookup");
-
-                      this.writeMessage(message, "starting lookup");
-
-                      try {
-                        val messageContent = message.getContent();
-                        val playListid =
-                            messageContent.substring(messageContent.indexOf(' ') + 1).trim();
-                        val playlist = spotifyPort.getPlaylistByUrl(playListid);
-
-                        val parsedPlaylistName = playlist.getName().replace(' ', '_');
-
-                        // message to create new playlist
-                        this.writeMessage(
-                            message, MUSICBOT_MAKEPLAYLIST_COMMAND + " " + parsedPlaylistName);
-
-                        this.writeAppendMessageBatch(
-                            message, playlist.getTracks(), parsedPlaylistName);
-
-                      } catch (Exception e) {
-                        log.error("transformation failed", e);
-                        this.writeMessage(message, "transformation failed: " + e.getMessage());
                       }
                       return Mono.empty();
                     }));
-
     login.block();
+  }
+
+  private void handlePlaylistRequest(
+      MessageCreateEvent event, PlaylistInputType playlistInputType) {
+    val message = event.getMessage();
+    this.writeMessage(message, "starting lookup");
+
+    try {
+      val messageContent = message.getContent();
+      val playListid = message.getContent().substring(messageContent.indexOf(' ') + 1).trim();
+
+      Playlist playlist;
+
+      if (playlistInputType == PlaylistInputType.PLAYLIST_URL) {
+        playlist = spotifyPort.getPlaylistByUrl(playListid);
+      } else {
+        playlist = spotifyPort.getPlaylist(playListid);
+      }
+
+      val parsedPlaylistName = playlist.getName().replace(' ', '_');
+
+      // message to create new playlist
+      this.writeMessage(message, MUSICBOT_MAKEPLAYLIST_COMMAND + " " + parsedPlaylistName);
+
+      // messages to append music
+      this.writeAppendMessageBatch(message, playlist.getTracks(), parsedPlaylistName);
+
+    } catch (Exception e) {
+      log.error("transformation failed", e);
+      this.writeMessage(message, "transformation failed: " + e.getMessage());
+    }
   }
 
   private List<String> getPlaylistAsYoutubeLinks(List<Track> tracks) {
