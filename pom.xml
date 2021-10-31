@@ -9,6 +9,7 @@
         <module>domain</module>
         <module>adapter-youtube</module>
         <module>adapter-discord</module>
+        <module>adapter-filesystem</module>
     </modules>
     <parent>
         <groupId>org.springframework.boot</groupId>
@@ -53,6 +54,11 @@
             <dependency>
                 <groupId>com.bumblebeebro</groupId>
                 <artifactId>com-bumblebeebro-adapter-discord</artifactId>
+                <version>0.0.1-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>com.bumblebeebro</groupId>
+                <artifactId>com-bumblebeebro-adapter-filesystem</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
             </dependency>
             <dependency>
