@@ -6,4 +6,6 @@ import java.io.IOException;
 public interface FileSystemPort {
 
   File saveToFile(String input, String name) throws IOException;
+
+  File saveToDisocrdMusicBotDir(String input, String name) throws IOException;
 }

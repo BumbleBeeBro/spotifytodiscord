@@ -2,3 +2,4 @@ discordtoken=test
 googletokens=test1,test2
 spotifyclientid=test
 spotifyclientsecret=test
+playlistTargetDir=/path/to/discord4j/playlists

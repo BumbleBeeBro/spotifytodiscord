@@ -56,9 +56,11 @@ public class DiscordService {
 
       val parsedPlaylistName = playlist.getName().replace(' ', '_');
 
-      if (option != null && option.equals("file")) {
+      if (option != null && option.equals("download")) {
         this.returnAsFile(message, playlist, parsedPlaylistName);
 
+      } else if (option != null && option.equals("bot")) {
+        this.toDisocrdMusicBot(message, playlist, parsedPlaylistName);
       } else {
         this.returnAsMusicBotCommands(message, playlist, parsedPlaylistName);
       }
@@ -83,6 +85,27 @@ public class DiscordService {
     val file = fileSystemPort.saveToFile(fileInput.get(), parsedPlaylistName);
 
     this.writeMessage(message, "File with YouTube links of Playlist " + playlist.getName(), file);
+  }
+
+  private void toDisocrdMusicBot(Message message, Playlist playlist, String parsedPlaylistName)
+      throws IOException {
+    val links = this.getPlaylistAsYoutubeLinks(playlist.getTracks());
+
+    val fileInput = links.stream().reduce((s1, s2) -> s1 + "\r\n" + s2);
+
+    if (fileInput.isEmpty()) {
+      this.writeMessage(message, "No youtube links found");
+      return;
+    }
+
+    val file = fileSystemPort.saveToDisocrdMusicBotDir(fileInput.get(), parsedPlaylistName);
+
+    this.writeMessage(
+        message,
+        "File with YouTube links for playlist "
+            + playlist.getName()
+            + " added to MusicBot Playlist Directory as "
+            + file.getName());
   }
 
   private void returnAsMusicBotCommands(
