@@ -28,6 +28,9 @@
         <youtube-client.version>v3-rev20210915-1.32.1</youtube-client.version>
         <google-api.version>1.31.5</google-api.version>
         <google-oauth.version>1.32.1</google-oauth.version>
+        <google-http-client.version>1.19.0</google-http-client.version>
+        <spring-boot-web.version>2.4.2</spring-boot-web.version>
+        <discord4j.version>3.2.0</discord4j.version>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -61,13 +64,11 @@
                 <artifactId>com-bumblebeebro-adapter-filesystem</artifactId>
                 <version>0.0.1-SNAPSHOT</version>
             </dependency>
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-jpa</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-oauth2-client</artifactId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>${spring-boot-web.version}</version>
             </dependency>
 
             <dependency>
@@ -78,12 +79,13 @@
             <dependency>
                 <groupId>org.projectlombok</groupId>
                 <artifactId>lombok</artifactId>
+                <version>RELEASE</version>
                 <optional>true</optional>
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
-                <version>2.4.2</version>
+                <version>${spring-boot-web.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -109,18 +111,12 @@
             <dependency>
                 <groupId>com.google.oauth-client</groupId>
                 <artifactId>google-oauth-client-java6</artifactId>
-                <version>1.32.1</version>
+                <version>${google-oauth.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.http-client</groupId>
                 <artifactId>google-http-client-jackson2</artifactId>
-                <version>1.19.0</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-web</artifactId>
-                <version>2.4.2</version>
+                <version>${google-http-client.version}</version>
             </dependency>
 
             <dependency>
@@ -132,28 +128,9 @@
             <dependency>
                 <groupId>com.discord4j</groupId>
                 <artifactId>discord4j-core</artifactId>
-                <version>3.2.0</version>
+                <version>${discord4j.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <build>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <configuration>
-                        <excludes>
-                            <exclude>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                            </exclude>
-                        </excludes>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
-    </build>
 
 </project>
